@@ -1,125 +1,108 @@
-import numpy as np
-
-def leer_datos():
-    #Lee los datos desde la consola.
-    N = int(input("Ingrese la cantidad de programadores (N): "))
-    M = int(input("Ingrese la cantidad de tareas (M): "))
-    print("Ingrese la matriz de costos (N filas, M columnas):")
-    C = [list(map(int, input(f"Fila {i + 1}: ").split())) for i in range(N)]
-    return N, M, C
+from munkres import Munkres
+import copy
 
 def reducir_filas(matriz):
-    #Reduce cada fila de la matriz restando el valor mínimo de cada fila.
-
-    print("\nReducción de filas:")
-    for i in range(len(matriz)):
-        min_val = min(matriz[i])
-        for j in range(len(matriz[i])):
-            matriz[i][j] -= min_val
-    print(np.array(matriz))
+    reducida = []
+    print("\n--- Reducción por filas ---")
+    for i, fila in enumerate(matriz):
+        minimo = min(fila)
+        reducida_fila = [x - minimo for x in fila]
+        print(f"Fila {i}: mínimo = {minimo}, reducida = {reducida_fila}")
+        reducida.append(reducida_fila)
+    return reducida
 
 def reducir_columnas(matriz):
-    #Reduce cada columna de la matriz restando el valor mínimo de cada columna.
-    
-    print("\nReducción de columnas:")
-    for j in range(len(matriz[0])):
-        min_val = min(matriz[i][j] for i in range(len(matriz)))
-        for i in range(len(matriz)):
-            matriz[i][j] -= min_val
-    print(np.array(matriz))
+    matriz_transpuesta = list(zip(*matriz))
+    reducida_transpuesta = []
+    print("\n--- Reducción por columnas ---")
+    for j, col in enumerate(matriz_transpuesta):
+        minimo = min(col)
+        reducida_col = [x - minimo for x in col]
+        print(f"Columna {j}: mínimo = {minimo}, reducida = {reducida_col}")
+        reducida_transpuesta.append(reducida_col)
+    return [list(fila) for fila in zip(*reducida_transpuesta)]
 
-def encontrar_ceros_cubiertos(matriz, filas_cubiertas, columnas_cubiertas):
-    #Encuentra los ceros no cubiertos por las líneas y devuelve sus coordenadas.
-    
-    for i in range(len(matriz)):
-        if not filas_cubiertas[i]:
-            for j in range(len(matriz[i])):
-                if matriz[i][j] == 0 and not columnas_cubiertas[j]:
-                    return i, j
-    return None
+def aplicar_metodo_hungaro_con_matrices(cost_matrix, N, M):
+    matriz_original = copy.deepcopy(cost_matrix)
 
-def asignar_tareas(matriz):
+    # Hacer cuadrada para el algoritmo
+    if N < M:
+        for _ in range(M - N):
+            cost_matrix.append([0] * M)
+    elif N > M:
+        for i in range(N):
+            cost_matrix[i] += [0] * (N - M)
 
-    #método húngaro para encontrar la asignación óptima.
+    print("\n--- Matriz original ---")
+    for fila in matriz_original:
+        print(fila)
 
-    N, M = len(matriz), len(matriz[0])
-    asignaciones = [-1] * M
-    filas_cubiertas = [False] * N
-    columnas_cubiertas = [False] * M
+    # Reducción
+    matriz_reducida = reducir_filas(cost_matrix)
+    matriz_reducida = reducir_columnas(matriz_reducida)
 
-    while True:
-        cero = encontrar_ceros_cubiertos(matriz, filas_cubiertas, columnas_cubiertas)
-        if cero is None:
-            break
-        i, j = cero
-        asignaciones[j] = i
-        filas_cubiertas[i] = True
-        columnas_cubiertas[j] = True
+    print("\n--- Matriz después de reducción ---")
+    for fila in matriz_reducida:
+        print(fila)
 
-    return asignaciones
+    m = Munkres()
+    asignacion = m.compute(matriz_reducida)
 
-def metodo_hungaro(C):
-    #método húngaro para minimizar el costo de asignación.
-
-    matriz = np.array(C, dtype=int)
-    print("\nMatriz inicial:")
-    print(matriz)
-
-    reducir_filas(matriz)
-    reducir_columnas(matriz)
-
-    while True:
-        filas_cubiertas = [False] * len(matriz)
-        columnas_cubiertas = [False] * len(matriz[0])
-        asignaciones = asignar_tareas(matriz)
-
-        if -1 not in asignaciones:
-            break
-
-        # Ajustar la matriz si no se puede cubrir completamente
-        valores_no_cubiertos = [
-            matriz[i][j]
-            for i in range(len(matriz))
-            for j in range(len(matriz[i]))
-            if not filas_cubiertas[i] and not columnas_cubiertas[j]
-        ]
-        min_val = min(valores_no_cubiertos)
-
-        print("\nAjuste de la matriz:")
-        for i in range(len(matriz)):
-            for j in range(len(matriz[i])):
-                if not filas_cubiertas[i] and not columnas_cubiertas[j]:
-                    matriz[i][j] -= min_val
-                elif filas_cubiertas[i] and columnas_cubiertas[j]:
-                    matriz[i][j] += min_val
-        print(matriz)
-
-    return asignaciones
-
-def calcular_costo_total(C, asignaciones):
-    #Calcula el costo total de la asignación.
+    asignacion_optima = []
     costo_total = 0
-    for j, i in enumerate(asignaciones):
-        if i != -1:
-            costo_total += C[i][j]
-    return costo_total
+
+    for row, col in asignacion:
+        if row < N and col < M:
+            asignacion_optima.append((row, col))
+            costo_total += matriz_original[row][col]
+
+    return asignacion_optima, costo_total
+
+
+# Entrada por archivo
+def leer_datos_desde_archivo(nombre_archivo):
+    with open(nombre_archivo, 'r') as file:
+        lineas = file.readlines()
+    N, M = map(int, lineas[0].strip().split())
+    matriz_costos = [list(map(int, linea.strip().split())) for linea in lineas[1:N+1]]
+    return matriz_costos, N, M
+
+# Entrada por consola
+def leer_datos_desde_consola():
+    N = int(input("Ingrese el número de programadores (N): "))
+    M = int(input("Ingrese el número de tareas (M): "))
+    matriz_costos = []
+    print("Ingrese la matriz de costos fila por fila (valores separados por espacio):")
+    for i in range(N):
+        fila = list(map(int, input(f"Costos del programador {i}: ").split()))
+        matriz_costos.append(fila)
+    return matriz_costos, N, M
 
 def main():
-    N, M, C = leer_datos()
-    if N < M:
-        print("Error: El número de programadores debe ser mayor o igual al número de tareas.")
+    print("1. Desde archivo")
+    print("2. Desde consola")
+    opcion = input("Opción (1/2): ").strip()
+
+    if opcion == '1':
+        archivo = input("Nombre del archivo (ruta completa): ").strip()
+        matriz_costos, N, M = leer_datos_desde_archivo(archivo)
+    elif opcion == '2':
+        matriz_costos, N, M = leer_datos_desde_consola()
+    else:
+        print("Opción inválida.")
         return
 
-    asignaciones = metodo_hungaro(C)
-    costo_total = calcular_costo_total(C, asignaciones)
+    asignacion_optima, costo_total = aplicar_metodo_hungaro_con_matrices(matriz_costos, N, M)
 
-    print("\nAsignaciones óptimas (tarea -> programador):")
-    for j, i in enumerate(asignaciones):
-        print(f"Tarea {j + 1} -> Programador {i + 1}")
-    print(f"\nCosto total de la asignación: {costo_total}")
+    print("\nAsignación óptima (programador → tarea):")
+    for programador, tarea in asignacion_optima:
+        costo = matriz_costos[programador][tarea]
+        print(f"Programador {programador} → Tarea {tarea}  (costo = {costo})")
+    print(f"\nCosto total: {costo_total}")
 
 if __name__ == "__main__":
     main()
+
 
 
 
