@@ -3,18 +3,21 @@
 from typing import List, Dict
 import numpy as np
 
+# Modela un programador con su capacidad máxima y lista de tareas asignadas.
 class Programador:
     def __init__(self, id: int, capacidad_max: int):
         self.id = id
         self.capacidad_max = capacidad_max  # Máximo de tareas que puede asumir
         self.tareas_asignadas = []
 
+# Representa una tarea con su ubicación y demanda de programadores.
 class Tarea:
     def __init__(self, id: int, demanda: int, ubicacion: str):
         self.id = id
         self.demanda = demanda  # Número de programadores requeridos
         self.ubicacion = ubicacion
 
+# Resuelve el problema de asignación usando el método del costo mínimo.
 class ProblemaTransporte:
     def __init__(self, programadores: List[Programador], tareas: List[Tarea], costos: np.ndarray):
         self.programadores = programadores
@@ -23,6 +26,7 @@ class ProblemaTransporte:
         self.asignaciones = []
         self.costo_total = 0
 
+    # Método para resolver el problema de asignación usando el método del costo mínimo.
     def metodo_costo_minimo(self):
         suministro = [p.capacidad_max for p in self.programadores]
         demanda = [t.demanda for t in self.tareas]
@@ -48,6 +52,7 @@ class ProblemaTransporte:
             suministro[i] -= cantidad
             demanda[j] -= cantidad
 
+    # Método para mostrar el reporte de asignación y costo total.
     def reporte(self):
         print("\n--- Reporte de Asignación con Transporte ---")
         for i, j, cantidad in self.asignaciones:
