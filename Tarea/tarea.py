@@ -1,9 +1,7 @@
 import numpy as np
 
 def leer_datos():
-    """
-    Lee los datos desde la consola.
-    """
+    #Lee los datos desde la consola.
     N = int(input("Ingrese la cantidad de programadores (N): "))
     M = int(input("Ingrese la cantidad de tareas (M): "))
     print("Ingrese la matriz de costos (N filas, M columnas):")
@@ -11,9 +9,8 @@ def leer_datos():
     return N, M, C
 
 def reducir_filas(matriz):
-    """
-    Reduce cada fila de la matriz restando el valor mínimo de cada fila.
-    """
+    #Reduce cada fila de la matriz restando el valor mínimo de cada fila.
+
     print("\nReducción de filas:")
     for i in range(len(matriz)):
         min_val = min(matriz[i])
@@ -22,9 +19,8 @@ def reducir_filas(matriz):
     print(np.array(matriz))
 
 def reducir_columnas(matriz):
-    """
-    Reduce cada columna de la matriz restando el valor mínimo de cada columna.
-    """
+    #Reduce cada columna de la matriz restando el valor mínimo de cada columna.
+    
     print("\nReducción de columnas:")
     for j in range(len(matriz[0])):
         min_val = min(matriz[i][j] for i in range(len(matriz)))
@@ -33,9 +29,8 @@ def reducir_columnas(matriz):
     print(np.array(matriz))
 
 def encontrar_ceros_cubiertos(matriz, filas_cubiertas, columnas_cubiertas):
-    """
-    Encuentra los ceros no cubiertos por las líneas y devuelve sus coordenadas.
-    """
+    #Encuentra los ceros no cubiertos por las líneas y devuelve sus coordenadas.
+    
     for i in range(len(matriz)):
         if not filas_cubiertas[i]:
             for j in range(len(matriz[i])):
@@ -44,9 +39,9 @@ def encontrar_ceros_cubiertos(matriz, filas_cubiertas, columnas_cubiertas):
     return None
 
 def asignar_tareas(matriz):
-    """
-    Implementa el método húngaro para encontrar la asignación óptima.
-    """
+
+    #método húngaro para encontrar la asignación óptima.
+
     N, M = len(matriz), len(matriz[0])
     asignaciones = [-1] * M
     filas_cubiertas = [False] * N
@@ -64,9 +59,8 @@ def asignar_tareas(matriz):
     return asignaciones
 
 def metodo_hungaro(C):
-    """
-    Aplica el método húngaro para minimizar el costo de asignación.
-    """
+    #método húngaro para minimizar el costo de asignación.
+
     matriz = np.array(C, dtype=int)
     print("\nMatriz inicial:")
     print(matriz)
@@ -103,9 +97,7 @@ def metodo_hungaro(C):
     return asignaciones
 
 def calcular_costo_total(C, asignaciones):
-    """
-    Calcula el costo total de la asignación.
-    """
+    #Calcula el costo total de la asignación.
     costo_total = 0
     for j, i in enumerate(asignaciones):
         if i != -1:
